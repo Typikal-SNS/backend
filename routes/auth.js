@@ -1,12 +1,153 @@
 const express = require('express')
 const bcrypt = require('bcrypt')
+const nodemailer = require('nodemailer');
 const passport = require('passport');
  
 const { User } = require('../models');
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
 const router = express.Router()
+router.post('/emailCheck',  async(req, res, next) => {
+  try {
+  
+    const exUser = await User.findOne({ where: { email  :req.body.mail } });
+    if (exUser) {
+      return res.status(403).json({
+        code: 403,
+        message: "존재하는 이메일 입니다. 다른 이메일을 사용해 주세요."
+      });
+    }
+    let authNum = Math.floor(1000 + Math.random()*9000);
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false,
+        auth: {
+            user: process.env.NODEMAILER_USER,
+            pass: process.env.NODEMAILER_PASS,
+        },
+    });
+  
+    let mailOptions = {
+        from: `Typikal-SNS-Service`,
+        to: req.body.mail,
+        subject: 'Typikal-SNS 회원가입 인증번호.',
+        text: "오른쪽 숫자를 입력해주세요 : " + authNum
+    };
+  
+    transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+            console.error(error);
+            res.end('서버 에러')
+        }
+        req.session.authNum = authNum;
+        res.status(200).json({
+          code: 200,
+          message: '이메일 전송 성공'
+        });
+        transporter.close()
+    });
+  } catch (error) {
+    console.error(error);
+    return next(error);
+  }
+ 
+});
+/**
+ * @swagger
+ *
+ * /auth/emailCheck:
+ *  post:
+ *    summary: "이메일 인증"
+ *    description: "POST 방식으로 이메일을 인증한다."
+ *    tags: [Users]
+ *    requestBody:
+ *      description: 이메일로 인증번호를 발송합니다.
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              mail:
+ *                type: string
+ *                description: "사용 할 이메일"
+ *                required: true
+ *    responses:
+ *      "200":
+ *        description: "메일 발송 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                message:
+ *                  type: string
+ *                  default: '이메일 전송 성공'
+ */
+ router.post('/authNumCheck', async(req, res) => {
+
+  if(req.body.authNum === req.session.authNum) {
+    delete req.session.authNum
+    req.session.joinable = true;
+    res.status(200).json({
+      code: 200,
+      message: "이메일 인증 성공"
+    })
+  } else {
+
+    res.json({
+      code: 403,
+      message: '인증번호가 틀립니다.'
+    })
+  }
+});
+/**
+ * @swagger
+ *
+ * /auth/authNumCheck:
+ *  post:
+ *    summary: "인증번호"
+ *    description: "POST 방식으로 인증번호를 확인한다.."
+ *    tags: [Users]
+ *    requestBody:
+ *      description: 인증번호가 맞는지 확인합니다. 
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              authNum:
+ *                type: integer
+ *                description: "인증번호"
+ *                required: true
+ *    responses:
+ *      "200":
+ *        description: "인증번호 인증 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                message:
+ *                  type: string
+ *                  default: "이메일 인증 성공"
+ */
 router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/
   try{
+    if (!req.session.joinable){
+      return res.status(403).json({
+        code: 403,
+        message: '이메일 인증을 먼저 해주세요.'
+      });
+
+    }
     const exUser1 = await User.findOne({
       where: {
         email: req.body.email,
@@ -36,9 +177,10 @@ router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/
             nickname: req.body.nickname,
             password: hashedPassword,
     });
+    delete req.session.joinable
     res.json({
       code: 200,
-      message: "join success"
+      message: "회원가입 성공"
     })
   } catch(e) {
     console.error(e)
@@ -88,10 +230,8 @@ router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/
  *                  default: 200
  *                message:
  *                  type: string
- *                  default: "join success"
+ *                  default: "회원가입 성공"
  */
-
-
 router.post('/login', isNotLoggedIn, (req, res, next) => {
   passport.authenticate('local', (err, user, info) => {
       if (err) {
@@ -113,12 +253,11 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
             },
         })
         fullUserWithoutPassword.dataValues.code = 200
-        fullUserWithoutPassword.dataValues.message = "login success"
+        fullUserWithoutPassword.dataValues.message = "로그인 성공"
         return res.status(200).json(fullUserWithoutPassword);
       });
   })(req, res, next);
 })
-
 /**
  * @swagger
  *
@@ -168,7 +307,7 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
  *                  default: 200
  *                message:
  *                  type: string
- *                  default: "login success"
+ *                  default: "로그인 성공"
  */
 router.get('/logout', isLoggedIn, (req, res) => {
   req.logout(function(err) {
@@ -176,7 +315,7 @@ router.get('/logout', isLoggedIn, (req, res) => {
     req.session.destroy();
     res.status(200).json({
       code: 200,
-      message: 'logout success'
+      message: '로그아웃 성공'
     })
   });
   });
@@ -201,7 +340,7 @@ router.get('/logout', isLoggedIn, (req, res) => {
  *                  default: 200
  *                message:
  *                  type: string
- *                  default: 'logout success'
+ *                  default: '로그아웃 성공'
  */
 
 module.exports = router
