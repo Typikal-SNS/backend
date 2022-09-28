@@ -6,7 +6,7 @@ const passport = require('passport');
 const { User } = require('../models');
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
 const router = express.Router()
-router.post('/emailCheck',  async(req, res, next) => {
+router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
   try {
   
     const exUser = await User.findOne({ where: { email  :req.body.mail } });
@@ -87,7 +87,7 @@ router.post('/emailCheck',  async(req, res, next) => {
  *                  type: string
  *                  default: '이메일 전송 성공'
  */
- router.post('/authNumCheck', async(req, res) => {
+ router.post('/authNumCheck', isNotLoggedIn,async(req, res) => {
 
   if(req.body.authNum === req.session.authNum) {
     delete req.session.authNum

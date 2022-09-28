@@ -1,9 +1,11 @@
 const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
+const morgan = require('morgan')
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const AuthRouter = require('./routes/auth')
+const userRouter = require('./routes/user')
 
 const db = require('./models');
 const passport = require('passport')
@@ -11,7 +13,7 @@ const passportConfig = require('./passport');
 const { swaggerUi, specs } = require("./swagger/swagger");
 dotenv.config()
 const app = express()
-db.sequelize.sync({ force: true})
+db.sequelize.sync()
   .then(() => {
     console.log('sequelize 서버 연결 완료')
   })
@@ -20,6 +22,7 @@ db.sequelize.sync({ force: true})
   })
 passportConfig();
 
+app.use(morgan('dev'))
 app.use(cors({
   origin: true,
   credentials:true,
@@ -38,6 +41,7 @@ app.use(passport.session());
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs))
 app.use('/auth', AuthRouter)
+app.use('/user', userRouter)
 app.listen(8080, () => {
   console.log('서버 실행중')
 })
