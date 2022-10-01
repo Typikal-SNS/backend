@@ -1,0 +1,30 @@
+
+  const onChangeImages = (e) => {
+    console.log('images', e.target.files);
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('image', e.target.image.files[0]);
+    formData.append('image', e.target.image.files[1]);
+    formData.append('image', e.target.image.files[2]);
+
+    e.target.files.map((v, index) => {
+      formData.append('image', v)
+    })
+
+    axios.post('/images', formData); 
+    // 응답으로 저장된 파일명을 준다.
+    
+  }
+
+<form encType="multipart/form-data" >
+    <div>
+      <input  placeholder="게시글부분" />
+    </div>
+    <div>
+       <input type="file" name="image" multiple onChange={onChangeImgInput}/>
+    </div>
+    <div>
+      <button type="submit">전송</button>
+    </div>
+  </form>
+  
