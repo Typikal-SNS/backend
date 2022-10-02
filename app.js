@@ -13,13 +13,13 @@ const passportConfig = require('./passport');
 const { swaggerUi, specs } = require("./swagger/swagger");
 dotenv.config()
 const app = express()
-/* db.sequelize.sync()
+db.sequelize.sync()
   .then(() => {
     console.log('sequelize 서버 연결 완료')
   })
   .catch((e) => {
     console.error(e)
-  }) */
+  })
 passportConfig();
 
 app.use(morgan('dev'))

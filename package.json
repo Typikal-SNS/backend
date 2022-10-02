@@ -24,7 +24,8 @@
     "swagger-ui-express": "^4.5.0"
   },
   "scripts": {
-    "dev": "nodemon app"
+    "dev": "nodemon app",
+    "api": "nodemon ./api/api"
   },
   "repository": {
     "type": "git",
