@@ -1,3 +1,5 @@
+const multer = require('multer')
+const path = require('path')
 exports.isLoggedIn = (req, res, next) => {
   if (req.isAuthenticated()) {
     next();
@@ -19,3 +21,17 @@ exports.isNotLoggedIn = (req, res, next) => {
     });
   }
 };
+const upload = multer({
+  storage: multer.diskStorage({
+    destination(req, file, done) {
+      done(null, 'uploads');
+    },
+    filename(req, file, done) { // 혁진.png
+      const ext = path.extname(file.originalname); // 확장자 추출(.png)
+      const basename = path.basename(file.originalname, ext); // 혁진
+      done(null, basename + '_' + new Date().getTime() + ext); // 혁진_15184712891.png
+    },
+  }),
+  limits: { fileSize: 20 * 1024 * 1024 }, // 20MB
+});
+exports.upload =  upload

@@ -19,14 +19,20 @@ module.exports = class User extends Model {
         type: DataTypes.STRING(100),
         allowNull: false, // 필수
       },
+      description: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        unique: true
+      },
     }, {
       modelName: 'User',
       tableName: 'users',
-      charset: 'utf8',
-      collate: 'utf8_general_ci', // 한글 저장
+      charset: 'utf8mb4',
+      collate: 'utf8mb4_general_ci', // 이모티콘 저장
       sequelize,
     });
   }
   static associate(db) {
+    db.User.hasOne(db.Image);
   }
 };

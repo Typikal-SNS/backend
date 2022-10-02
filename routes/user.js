@@ -1,9 +1,20 @@
 const express = require('express')
 const bcrypt = require('bcrypt')
-const { User } = require('../models')
-const { isLoggedIn } = require('./middlewares')
+
+const fs = require('fs');
+const path = require('path')
+const { User, Image } = require('../models')
+const { isLoggedIn, upload } = require('./middlewares')
 
 const router = express.Router()
+
+
+try {
+  fs.accessSync('uploads');
+} catch (error) {
+  console.log('uploads 폴더가 없으므로 생성합니다.');
+  fs.mkdirSync('uploads');
+}
 
 router.patch('/nickname', isLoggedIn, async (req, res, next) => {
   try {
@@ -117,38 +128,206 @@ router.patch('/nickname', isLoggedIn, async (req, res, next) => {
       next(error)
     }
   })
-  /**
-   * @swagger
-   *
-   * /user/password:
-   *  patch:
-   *    summary: "비밀번호 변경"
-   *    description: "PATCH 방식으로 비밀번호를 변경한다."
-   *    tags: [Users]
-   *    requestBody:
-   *      description: 비밀번호를 변경합니다.
-   *      content:
-   *        application/json:
-   *          schema:
-   *            type: object
-   *            properties:
-   *              newPassword:
-   *                type: string
-   *                description: "새로운 비밀번호"
-   *                required: true
-   *    responses:
-   *      "200":
-   *        description: "비밀번호 변경 성공 시 응답"
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                code:
-   *                  type: integer
-   *                  default: 200
-   *                message:
-   *                  type: string
-   *                  default: '비밀번호 변경 성공'
-   */
+/**
+ * @swagger
+ *
+ * /user/password:
+ *  patch:
+ *    summary: "비밀번호 변경"
+ *    description: "PATCH 방식으로 비밀번호를 변경한다."
+ *    tags: [Users]
+ *    requestBody:
+ *      description: 비밀번호를 변경합니다.
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              newPassword:
+ *                type: string
+ *                description: "새로운 비밀번호"
+ *                required: true
+ *    responses:
+ *      "200":
+ *        description: "비밀번호 변경 성공 시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                message:
+ *                  type: string
+ *                  default: '비밀번호 변경 성공'
+ */
+
+router.post('/image', isLoggedIn, upload.single('image'), async (req, res, next) => {
+  try{
+    if(!req.file){
+      return res.json({
+        code: 400,
+        message: '사진을 전송하셔야 합니다.'
+      })  
+    }
+    res.json({
+      code: 200,
+      src: req.file.filename,
+      message: '사진 전송 성공'
+    })
+  } catch(error) {
+    console.error(error)
+    next(error)
+  }
+})
+/**
+ * @swagger
+ *
+ * /user/image:
+ *  post:
+ *    summary: "유저 프로필 이미지 변경"
+ *    description: "POST 방식으로 유저 프로필 이미지를 받은후 프론트엔드로 src 를 넘겨준다"
+ *    tags: [Users]
+ *    requestBody:
+ *      description: 사진 미리보기에 사용되는 기능입니다.
+ *      required: true
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              image:
+ *                type: string
+ *                required: true
+ *                format: binary
+ *        
+ *    responses:
+ *      "200":
+ *        description: "사진 전송 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                src:
+ *                  type: string
+ *                  default: 'myNewProfileImg_151847asd12891.png'
+ *                message:
+ *                  type: string
+ *                  default: "사진 전송 성공"
+ */
+router.patch('/profile', isLoggedIn, upload.none(), async (req, res, next) => {
+  try{
+    const user = await User.findOne({
+      where: { id: req.user.id },
+      include: [{
+        model: Image,
+        attributes: ['src', 'id']
+      }]
+    })
+    if (!user) {
+      return res.status(403).json({
+        code: 403,
+        message: '존재하지 않는 사용자 입니다.'
+      });
+    }
+    if(!req.body.image && !req.body.description){
+      return res.status(200).json({
+        code: 200,
+        message: '변경사항 없음.'
+      }); 
+    }
+    if (req.body.image) { // 이미지를 바꾸겠다 .
+      if (req.body.image === 'empty'){
+        if (user.Image) {
+          await user.setImage(null)
+          await Image.destroy({
+            where: { id: user.Image.id }
+          })
+        }
+      } else{
+        if(user.Image){
+          await Image.destroy({
+            where: { id: user.Image.id }
+          })
+        } 
+          const image = await Image.create({ src: req.body.image });  
+          await user.setImage(image);
+      }
+
+    }
+
+    if (req.body.description){
+      let ntext = req.body.description
+      if (req.body.description === 'empty'){
+        ntext = null
+      }
+      await User.update({
+        description: ntext // 어떻게 수정? 
+      }, {
+        where: { id: req.user.id } // 누구 꺼?
+      })
+    }
+
+    res.status(201).json({
+      code: 201,
+      description: req.body.description ? req.body.description : '자기소개 변경사항 없음',
+      src: req.body.image ? req.body.image : '이미지 변경사항 없음',
+      message: '프로필 적용 성공'
+    })
+  } catch(error){
+    console.error(error)
+    next(error)
+  }
+
+})
+ /**
+ * @swagger
+ *
+ * /user/profile:
+ *  patch:
+ *    summary: "유저 프로필 정보 변경"
+ *    description: "PATCH 방식으로 유저 프로필 정보를 변경한다"
+ *    tags: [Users]
+ *    requestBody:
+ *      description: 유저의 프로필 정보변경을 확정합니다. 프로필사진을 비우거나, 자기소개를 비워놓고 싶을땐 'empty' 문자열을 전송해야 합니다.
+ *      required: true
+ *      content:
+ *        multipart/form-data:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              description:
+ *                type: string
+ *                default: "새로운 자기소개지롱~"
+ *              image:
+ *                type: string
+ *                default: 'myNewProfileImg_151847asd12891.png'
+ *        
+ *    responses:
+ *      "201":
+ *        description: "프로필 변경 성공 시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 201
+ *                description:
+ *                  type: string
+ *                  default: "새로운 자기소개지롱~"
+ *                src:
+ *                  type: string
+ *                  default: 'myfavoriteImg_151847asd12891.png'
+ *                message:
+ *                  type: string
+ *                  default: '프로필 적용 성공'
+ */
+
 module.exports = router

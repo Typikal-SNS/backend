@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const nodemailer = require('nodemailer');
 const passport = require('passport');
  
-const { User } = require('../models');
+const { User, Image } = require('../models');
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
 const router = express.Router()
 router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
@@ -41,6 +41,7 @@ router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
             res.end('서버 에러')
         }
         req.session.authNum = authNum;
+        req.session.mail = req.body.mail
         res.status(200).json({
           code: 200,
           message: '이메일 전송 성공'
@@ -141,12 +142,12 @@ router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
  */
 router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/
   try{
+
     if (!req.session.joinable){
       return res.status(403).json({
         code: 403,
         message: '이메일 인증을 먼저 해주세요.'
       });
-
     }
     const exUser1 = await User.findOne({
       where: {
@@ -170,6 +171,12 @@ router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/
           message: '이미 사용 중인 닉네임입니다.'
         });
       }
+    if (req.session.mail != req.body.email){
+      return res.status(403).json({
+        code: 403,
+        message: '인증받은 이메일로만 가입 가능합니다..'
+      });  
+    }
 
     const hashedPassword = await bcrypt.hash(req.body.password, 12);
     await User.create({
@@ -178,6 +185,7 @@ router.post('/join', isNotLoggedIn, async (req, res, next) => { // POST /user/
             password: hashedPassword,
     });
     delete req.session.joinable
+    delete req.session.mail
     res.json({
       code: 200,
       message: "회원가입 성공"
@@ -251,6 +259,10 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
             attributes: {
               exclude: ['password', 'updatedAt']
             },
+            include: [{
+              model: Image,
+              attributes: ['src', 'id'],
+            }]
         })
         fullUserWithoutPassword.dataValues.code = 200
         fullUserWithoutPassword.dataValues.message = "로그인 성공"
@@ -302,12 +314,22 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
  *                createdAt:
  *                  type: string
  *                  default: "2022-09-26T08:21:58.000Z"
+ *                Image:
+ *                    type: object
+ *                    properties:
+ *                      id: 
+ *                        type: integer
+ *                        default: 1
+ *                      src: 
+ *                        type: string
+ *                        default: "myprofileimg_1241414343.png"
  *                code:
  *                  type: integer
  *                  default: 200
  *                message:
  *                  type: string
  *                  default: "로그인 성공"
+
  */
 router.get('/logout', isLoggedIn, (req, res) => {
   req.logout(function(err) {
