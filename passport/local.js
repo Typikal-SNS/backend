@@ -13,7 +13,7 @@ module.exports = () => {
         where: { email }
       });
       if (!user) {
-        return done(null, false, { reason: '존재하지 않는 이메일입니다!' });
+        return done(null, false, { reason: '등록되지 않는 이메일입니다.' });
       }
       const result = await bcrypt.compare(password, user.password);
       if (result) {

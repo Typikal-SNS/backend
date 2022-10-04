@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 const nodemailer = require('nodemailer');
 const passport = require('passport');
  
-const { User, Image } = require('../models');
+const { User, Image, Post } = require('../models');
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
 const router = express.Router()
 router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
@@ -111,7 +111,7 @@ router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
  * /auth/authNumCheck:
  *  post:
  *    summary: "인증번호"
- *    description: "POST 방식으로 인증번호를 확인한다.."
+ *    description: "POST 방식으로 인증번호를 확인한다."
  *    tags: [Users]
  *    requestBody:
  *      description: 인증번호가 맞는지 확인합니다. 
@@ -257,11 +257,22 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
         const fullUserWithoutPassword = await User.findOne({
             where: { id: user.id },
             attributes: {
-              exclude: ['password', 'updatedAt']
+              exclude: ['password']
             },
             include: [{
               model: Image,
               attributes: ['src', 'id'],
+            },{
+              model: Post,
+              attributes: ['id'],
+            }, {
+              model: User,
+              as: 'Followings',
+              attributes: ['id'],
+            }, {
+              model: User,
+              as: 'Followers',
+              attributes: ['id'],
             }]
         })
         fullUserWithoutPassword.dataValues.code = 200
@@ -314,6 +325,9 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
  *                createdAt:
  *                  type: string
  *                  default: "2022-09-26T08:21:58.000Z"
+ *                updatedAt:
+ *                  type: string
+ *                  default: "2022-09-28T11:46:32.000Z"
  *                Image:
  *                    type: object
  *                    properties:
@@ -323,6 +337,15 @@ router.post('/login', isNotLoggedIn, (req, res, next) => {
  *                      src: 
  *                        type: string
  *                        default: "myprofileimg_1241414343.png"
+ *                Posts: 
+ *                    type: array
+ *                    default: [{id: 2}, {id: 6}, {id: 7}]
+ *                Followings:
+ *                    type: array
+ *                    default: [{id: 3}, {id: 5}, {id: 6}]
+ *                Followers:
+ *                    type: array
+ *                    default: [{id: 4}, {id: 5}, {id: 6}]
  *                code:
  *                  type: integer
  *                  default: 200

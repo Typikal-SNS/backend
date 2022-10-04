@@ -40,7 +40,7 @@
  * /auth/authNumCheck:
  *  post:
  *    summary: "인증번호"
- *    description: "POST 방식으로 인증번호를 확인한다.."
+ *    description: "POST 방식으로 인증번호를 확인한다."
  *    tags: [Users]
  *    requestBody:
  *      description: 인증번호가 맞는지 확인합니다. 
@@ -114,7 +114,6 @@
  *                  type: string
  *                  default: "회원가입 성공"
  */
-
 /**
  * @swagger
  *
@@ -159,12 +158,34 @@
  *                createdAt:
  *                  type: string
  *                  default: "2022-09-26T08:21:58.000Z"
+ *                updatedAt:
+ *                  type: string
+ *                  default: "2022-09-28T11:46:32.000Z"
+ *                Image:
+ *                    type: object
+ *                    properties:
+ *                      id: 
+ *                        type: integer
+ *                        default: 1
+ *                      src: 
+ *                        type: string
+ *                        default: "myprofileimg_1241414343.png"
+ *                Posts: 
+ *                    type: array
+ *                    default: [{id: 2}, {id: 6}, {id: 7}]
+ *                Followings:
+ *                    type: array
+ *                    default: [{id: 3}, {id: 5}, {id: 6}]
+ *                Followers:
+ *                    type: array
+ *                    default: [{id: 4}, {id: 5}, {id: 6}]
  *                code:
  *                  type: integer
  *                  default: 200
  *                message:
  *                  type: string
  *                  default: "로그인 성공"
+
  */
 
 /**

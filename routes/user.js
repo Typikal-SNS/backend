@@ -163,23 +163,18 @@ router.patch('/nickname', isLoggedIn, async (req, res, next) => {
  *                  default: '비밀번호 변경 성공'
  */
 
-router.post('/image', isLoggedIn, upload.single('image'), async (req, res, next) => {
-  try{
-    if(!req.file){
-      return res.json({
-        code: 400,
-        message: '사진을 전송하셔야 합니다.'
-      })  
-    }
-    res.json({
-      code: 200,
-      src: req.file.filename,
-      message: '사진 전송 성공'
-    })
-  } catch(error) {
-    console.error(error)
-    next(error)
+router.post('/image', isLoggedIn, upload.single('image'), (req, res, next) => {
+  if(!req.file){
+    return res.json({
+      code: 400,
+      message: '사진을 전송하셔야 합니다.'
+    })  
   }
+  res.json({
+    code: 200,
+    src: req.file.filename,
+    message: '사진 전송 성공'
+  })
 })
 /**
  * @swagger
@@ -190,7 +185,7 @@ router.post('/image', isLoggedIn, upload.single('image'), async (req, res, next)
  *    description: "POST 방식으로 유저 프로필 이미지를 받은후 프론트엔드로 src 를 넘겨준다"
  *    tags: [Users]
  *    requestBody:
- *      description: 사진 미리보기에 사용되는 기능입니다.
+ *      description: 프로필 사진 미리보기에 사용되는 기능입니다.
  *      required: true
  *      content:
  *        multipart/form-data:

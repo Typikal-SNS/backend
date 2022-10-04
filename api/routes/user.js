@@ -81,7 +81,7 @@
  *    description: "POST 방식으로 유저 프로필 이미지를 받은후 프론트엔드로 src 를 넘겨준다"
  *    tags: [Users]
  *    requestBody:
- *      description: 사진 미리보기에 사용되는 기능입니다.
+ *      description: 프로필 사진 미리보기에 사용되는 기능입니다.
  *      required: true
  *      content:
  *        multipart/form-data:
