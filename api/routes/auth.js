@@ -33,7 +33,7 @@
  *                  type: string
  *                  default: '이메일 전송 성공'
  */
- 
+
 /**
  * @swagger
  *
@@ -114,6 +114,7 @@
  *                  type: string
  *                  default: "회원가입 성공"
  */
+
 /**
  * @swagger
  *
@@ -211,3 +212,4 @@
  *                  type: string
  *                  default: '로그아웃 성공'
  */
+

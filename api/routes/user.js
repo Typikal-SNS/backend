@@ -1,3 +1,4 @@
+
 /**
  * @swagger
  *
@@ -147,8 +148,8 @@
  *            properties:
  *              image:
  *                type: string
+ *                required: true
  *                format: binary
- * 
  *        
  *    responses:
  *      "200":
@@ -168,8 +169,8 @@
  *                  type: string
  *                  default: "사진 전송 성공"
  */
-        
-/**
+
+ /**
  * @swagger
  *
  * /user/profile:
@@ -213,3 +214,4 @@
  *                  type: string
  *                  default: '프로필 적용 성공'
  */
+
