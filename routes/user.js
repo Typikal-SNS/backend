@@ -3,7 +3,7 @@ const bcrypt = require('bcrypt')
 
 const fs = require('fs');
 const path = require('path')
-const { User, Image } = require('../models')
+const { User, Image, Post } = require('../models')
 const { isLoggedIn, upload } = require('./middlewares')
 
 const router = express.Router()
@@ -15,7 +15,101 @@ try {
   console.log('uploads 폴더가 없으므로 생성합니다.');
   fs.mkdirSync('uploads');
 }
+router.get('/', async (req, res, next) => { // GET /user
+  try {
+    if (req.user) {
+      const fullUserWithoutPassword = await User.findOne({
+        where: { id: req.user.id },
+        attributes: {
+          exclude: ['password']
+        },
+        include: [{
+          model: Image,
+          attributes: ['src', 'id'],
+        },{
+          model: Post,
+          attributes: ['id'],
+        }, {
+          model: User,
+          as: 'Followings',
+          attributes: ['id'],
+        }, {
+          model: User,
+          as: 'Followers',
+          attributes: ['id'],
+        }]
+      })
+      fullUserWithoutPassword.dataValues.code = 200
+      fullUserWithoutPassword.dataValues.message = "유저 정보 조회 성공"
+      res.status(200).json(fullUserWithoutPassword);
+    } else {
+      res.status(200).json({
+        code: 200,
+        message: "당신은 로그인 하지 않았습니다."
+      });
+    }
+  } catch (error) {
+    console.error(error);
+   next(error);
+  }
+});
+/**
+ * @swagger
+ *
+ * /user:
+ *  get:
+ *    summary: "유저 정보조회"
+ *    description: "GET 방식으로 현재 로그인한 유저의 정보를 조회한다."
+ *    tags: [Users]
+ *    responses:
+ *      "200":
+ *        description: "정보조회 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                id:
+ *                  type: integer
+ *                  default: 37
+ *                email:
+ *                  type: string
+ *                  default: "hyukjin.kim.dev@gmail.com"
+ *                nickname:
+ *                  type: string
+ *                  default: "코딩전사"
+ *                createdAt:
+ *                  type: string
+ *                  default: "2022-09-26T08:21:58.000Z"
+ *                updatedAt:
+ *                  type: string
+ *                  default: "2022-09-28T11:46:32.000Z"
+ *                Image:
+ *                    type: object
+ *                    properties:
+ *                      id: 
+ *                        type: integer
+ *                        default: 1
+ *                      src: 
+ *                        type: string
+ *                        default: "myprofileimg_1241414343.png"
+ *                Posts: 
+ *                    type: array
+ *                    default: [{id: 2}, {id: 6}, {id: 7}]
+ *                Followings:
+ *                    type: array
+ *                    default: [{id: 3}, {id: 5}, {id: 6}]
+ *                Followers:
+ *                    type: array
+ *                    default: [{id: 4}, {id: 5}, {id: 6}]
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                message:
+ *                  type: string
+ *                  default: "유저 정보 조회 성공"
 
+ */
 router.patch('/nickname', isLoggedIn, async (req, res, next) => {
   try {
     const user1 = await User.findOne({
