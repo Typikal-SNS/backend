@@ -251,16 +251,16 @@ router.get('/:postId', async (req, res, next) => {
 /**
  * @swagger
  *
- * /post/{PostId}:
+ * /post/{postId}:
  *  get:
  *    summary: "게시글 조회"
  *    description: "GET 방식으로  게시글을 조회한다."
  *    tags: [Posts]
  *    parameters:
  *      - in: path
- *        name: PostId
+ *        name: postId
  *        required: true
- *        description: PostId
+ *        description: postId
  *        default: 1
  *        schema:
  *          type: number
@@ -316,8 +316,8 @@ router.get('/:postId', async (req, res, next) => {
  *                        }]
  *                    Comments:
  *                        type: array
- *                        default: [{id: 4, content: "세계정복은 무슨 ㅋㅋ", UserId: 6, PostId: 1, User: {id: 6, nickname: "코코몽"} }, 
- *                                  {id: 7, content: "응원합니다", UserId: 8, PostId: 1, User: {id: 8, nickname: "이층사는아저씨"} } ]
+ *                        default: [{id: 4, content: "세계정복은 무슨 ㅋㅋ", createdAt: "2022-09-26T08:21:58.000Z", updatedAt: "2022-10-02T15:33:28.000Z", UserId: 6, PostId: 1, RecommentId: null, User: {id: 6, nickname: "코코몽"} }, 
+ *                                  {id: 7, content: "응원합니다", createdAt: "2022-09-26T08:21:58.000Z", updatedAt: "2022-10-02T15:33:28.000Z", UserId: 8, PostId: 1, RecommentId: 2, User: {id: 8, nickname: "이층사는아저씨"} } ]
  *                    Likers:
  *                        type: array
  *              
@@ -360,6 +360,83 @@ router.post('/:postId/comment', isLoggedIn, async (req, res, next) => { // POST 
   }
 });
 
+
+/**
+ * @swagger
+ *
+ * /post/{postId}/comment:
+ *  post:
+ *    summary: "게시글에 댓글달기"
+ *    description: "POST 방식으로 게시글에 댓글을 등록함"
+ *    tags: [Posts]
+ *    parameters:
+ *      - in: path
+ *        name: postId
+ *        required: true
+ *        description: postId
+ *        default: 1
+ *        schema:
+ *          type: number
+ *    requestBody:
+ *      description: 게시글 댓글달기 API입니다.
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              content:
+ *                 type: string
+ *                 default: "1번게시글에 달리는 댓글이지롱~"
+ *        
+ *    responses:
+ *      "201":
+ *        description: "댓글 달기 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 201
+ *                fullComment:
+ *                  type: object
+ *                  properties:
+ *                    id:
+ *                      type: integer
+ *                      default: 2
+ *                    content:
+ *                      type: string
+ *                      default: "1번게시글에 달리는 댓글이지롱~"
+ *                    createdAt:
+ *                      type: string
+ *                      default: "2022-09-26T08:21:58.000Z"
+ *                    updatedAt:
+ *                      type: string
+ *                      default: "2022-09-27T10:33:28.000Z"
+ *                    UserId:
+ *                      type: integer
+ *                      default: 4
+ *                    PostId:
+ *                      type: integer
+ *                      default: 1
+ *                    RecommentId:
+ *                      type: integet
+ *                      default: null
+ *                    User:
+ *                        type: object
+ *                        properties:
+ *                          id: 
+ *                            type: integer
+ *                            default: 4
+ *                          nickname: 
+ *                            type: string
+ *                            default: '댓글작성자4의닉네임'
+ *                message:
+ *                  type: string
+ *                  default: "댓글 달기 성공"
+ */
 router.patch('/:postId/like', isLoggedIn, async (req, res, next) => { // PATCH /post/1/like
   try {
     const post = await Post.findOne({ where: { id: req.params.postId }});
