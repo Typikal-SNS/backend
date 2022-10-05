@@ -224,6 +224,7 @@ router.get('/:postId', async (req, res, next) => {
         attributes: ['id', 'nickname'],
       }, {
         model: Image,
+        attributes: ['src', 'PostId'],
       }, {
         model: Comment,
         include: [{
@@ -239,13 +240,92 @@ router.get('/:postId', async (req, res, next) => {
     });
     res.status(200).json({
       code: 200,
-      post
+      message: '게시글 조회 성공',
+      post,
     });
   } catch (error) {
     console.error(error);
     next(error);
   }
 });
+/**
+ * @swagger
+ *
+ * /post/{PostId}:
+ *  get:
+ *    summary: "게시글 조회"
+ *    description: "GET 방식으로  게시글을 조회한다."
+ *    tags: [Posts]
+ *    parameters:
+ *      - in: path
+ *        name: PostId
+ *        required: true
+ *        description: PostId
+ *        default: 1
+ *        schema:
+ *          type: number
+ *    responses:
+ *      "200":
+ *        description: "게시글 조회 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                message:
+ *                  type: string
+ *                  default: "게시글 조회 성공"
+ *                post:
+ *                  type: object
+ *                  properties:
+ *                    id:
+ *                      type: integer
+ *                      default: 1
+ *                    content:
+ *                      type: string
+ *                      default: "나는 코딩을 열심히해서 세계를 정복할거야! #코딩전사 #노드js"
+ *                    createdAt:
+ *                      type: string
+ *                      default: "2022-09-26T08:21:58.000Z"
+ *                    updatedAt:
+ *                      type: string
+ *                      default: "2022-09-27T10:33:28.000Z"
+ *                    UserId:
+ *                      type: integer
+ *                      default: 4
+ *                    User:
+ *                        type: object
+ *                        properties:
+ *                          id: 
+ *                            type: integer
+ *                            default: 4
+ *                          nickname: 
+ *                            type: string
+ *                            default: '게시글작성자4의닉네임'
+ *                    Images:
+ *                        type: array
+ *                        default: [{
+ *                         src: "Image1_14141123123.png",
+ *                         PostId: 1
+ *                        },{
+ *                         src: "image2_9414123123.png",
+ *                         PostId: 1
+ *                        }]
+ *                    Comments:
+ *                        type: array
+ *                        default: [{id: 4, content: "세계정복은 무슨 ㅋㅋ", UserId: 6, PostId: 1, User: {id: 6, nickname: "코코몽"} }, 
+ *                                  {id: 7, content: "응원합니다", UserId: 8, PostId: 1, User: {id: 8, nickname: "이층사는아저씨"} } ]
+ *                    Likers:
+ *                        type: array
+ *              
+ *                        default: [{id: 8}, {id: 15}, {id: 22}]
+ *                
+ */ 
+
+
 router.post('/:postId/comment', isLoggedIn, async (req, res, next) => { // POST /post/1/comment
   try {
     const post = await Post.findOne({

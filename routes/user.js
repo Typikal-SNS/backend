@@ -215,7 +215,7 @@ router.post('/image', isLoggedIn, upload.single('image'), (req, res, next) => {
  *                  type: string
  *                  default: "사진 전송 성공"
  */
-router.patch('/profile', isLoggedIn, upload.none(), async (req, res, next) => {
+router.patch('/profile', isLoggedIn, async (req, res, next) => {
   try{
     const user = await User.findOne({
       where: { id: req.user.id },
@@ -292,7 +292,7 @@ router.patch('/profile', isLoggedIn, upload.none(), async (req, res, next) => {
  *      description: 유저의 프로필 정보변경을 확정합니다. 프로필사진을 비우거나, 자기소개를 비워놓고 싶을땐 'empty' 문자열을 전송해야 합니다.
  *      required: true
  *      content:
- *        multipart/form-data:
+ *        application/json:
  *          schema:
  *            type: object
  *            properties:

@@ -112,48 +112,47 @@
  *                  default: "사진 전송 성공"
  */
         
-   /**
-   * @swagger
-   *
-   * /user/profile:
-   *  patch:
-   *    summary: "유저 프로필 정보 변경"
-   *    description: "PATCH 방식으로 유저 프로필 정보를 변경한다"
-   *    tags: [Users]
-   *    requestBody:
-   *      description: 유저의 프로필 정보변경을 확정합니다. 프로필사진을 비우거나, 자기소개를 비워놓고 싶을땐 'empty' 문자열을 전송해야 합니다.
-   *      required: true
-   *      content:
-   *        multipart/form-data:
-   *          schema:
-   *            type: object
-   *            properties:
-   *              description:
-   *                type: string
-   *                default: "새로운 자기소개지롱~"
-   *              image:
-   *                type: string
-   *                default: 'myNewProfileImg_151847asd12891.png'
-   *        
-   *    responses:
-   *      "201":
-   *        description: "프로필 변경 성공 시 응답"
-   *        content:
-   *          application/json:
-   *            schema:
-   *              type: object
-   *              properties:
-   *                code:
-   *                  type: integer
-   *                  default: 201
-   *                description:
-   *                  type: string
-   *                  default: "새로운 자기소개지롱~"
-   *                src:
-   *                  type: string
-   *                  default: 'myfavoriteImg_151847asd12891.png'
-   *                message:
-   *                  type: string
-   *                  default: '프로필 적용 성공'
-   */
-  
+/**
+ * @swagger
+ *
+ * /user/profile:
+ *  patch:
+ *    summary: "유저 프로필 정보 변경"
+ *    description: "PATCH 방식으로 유저 프로필 정보를 변경한다"
+ *    tags: [Users]
+ *    requestBody:
+ *      description: 유저의 프로필 정보변경을 확정합니다. 프로필사진을 비우거나, 자기소개를 비워놓고 싶을땐 'empty' 문자열을 전송해야 합니다.
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              description:
+ *                type: string
+ *                default: "새로운 자기소개지롱~"
+ *              image:
+ *                type: string
+ *                default: 'myNewProfileImg_151847asd12891.png'
+ *        
+ *    responses:
+ *      "201":
+ *        description: "프로필 변경 성공 시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 201
+ *                description:
+ *                  type: string
+ *                  default: "새로운 자기소개지롱~"
+ *                src:
+ *                  type: string
+ *                  default: 'myfavoriteImg_151847asd12891.png'
+ *                message:
+ *                  type: string
+ *                  default: '프로필 적용 성공'
+ */
