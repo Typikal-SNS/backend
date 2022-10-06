@@ -219,6 +219,13 @@ router.get('/:postId', async (req, res, next) => {
   try {
     const post = await Post.findOne({
       where: { id: req.params.postId },
+      order: [
+        [Comment, 'RecommentId', 'ASC'],
+        [Comment, 'createdAt', 'ASC'],
+
+
+  
+      ],
       include: [{
         model: User,
         attributes: ['id', 'nickname'],
@@ -228,9 +235,8 @@ router.get('/:postId', async (req, res, next) => {
       }, {
         model: Comment,
         include: [{
-          model: User,
+          model: User, 
           attributes: ['id', 'nickname'],
-          order: [['createdAt', 'DESC']],
         }],
       }, {
         model: User, // 좋아요 누른 사람
@@ -317,7 +323,8 @@ router.get('/:postId', async (req, res, next) => {
  *                    Comments:
  *                        type: array
  *                        default: [{id: 4, content: "세계정복은 무슨 ㅋㅋ", createdAt: "2022-09-26T08:21:58.000Z", updatedAt: "2022-10-02T15:33:28.000Z", UserId: 6, PostId: 1, RecommentId: null, User: {id: 6, nickname: "코코몽"} }, 
- *                                  {id: 7, content: "응원합니다", createdAt: "2022-09-26T08:21:58.000Z", updatedAt: "2022-10-02T15:33:28.000Z", UserId: 8, PostId: 1, RecommentId: 2, User: {id: 8, nickname: "이층사는아저씨"} } ]
+ *                                  {id: 7, content: "응원합니다", createdAt: "2022-09-26T08:21:58.000Z", updatedAt: "2022-10-02T15:33:28.000Z", UserId: 8, PostId: 1, RecommentId: null, User: {id: 8, nickname: "이층사는아저씨"} },
+ *                                   {id: 9, content: "저는 응원 안하는데요?", createdAt: "2022-09-27T08:19:58.000Z", updatedAt: "2022-10-02T15:33:28.000Z", UserId: 11, PostId: 1, RecommentId: 7, User: {id: 11, nickname: "딴지걸기천재"} } ]
  *                    Likers:
  *                        type: array
  *              
@@ -337,6 +344,7 @@ router.post('/:postId/comment', isLoggedIn, async (req, res, next) => { // POST 
         message: '존재하지 않는 게시글 입니다.'
       })
     }
+
     const comment = await Comment.create({
       content: req.body.content,
       PostId: parseInt(req.params.postId, 10),
@@ -436,6 +444,135 @@ router.post('/:postId/comment', isLoggedIn, async (req, res, next) => { // POST 
  *                message:
  *                  type: string
  *                  default: "댓글 달기 성공"
+ */
+ router.post('/:postId/recomment', isLoggedIn, async (req, res, next) => { // POST /post/1/comment
+  try {
+    const post = await Post.findOne({
+      where: { id: req.params.postId },
+    });
+    if (!post) {
+      return res.status(403).json({
+        code: 402,
+        message: '존재하지 않는 게시글 입니다.'
+      })
+    }
+    const comment = await Comment.findOne({
+      where: {id: req.body.commentId }
+    })
+    if (!comment) {
+      return res.status(403).json({
+        code: 403,
+        message: '존재하지 않는 댓글 입니다.'
+      })
+    }
+    if (comment.UserId === req.user.id) {
+      return res.status(403).json({
+        code: 403,
+        message: '자신의 댓글에는 대댓글을 달 수 없습니다.'
+      })
+    }
+    const reComment = await Comment.create({
+      content: req.body.content,
+      PostId: parseInt(req.params.postId, 10),
+      UserId: req.user.id,
+      RecommentId: req.body.commentId,
+    })
+    const fullComment = await Comment.findOne({
+      where: { id: reComment.id },
+      include: [{
+        model: User,
+        attributes: ['id', 'nickname'],
+      }],
+    })
+    res.status(201).json({
+      code: 201,
+      fullComment,
+      message: '대댓글달기 성공'
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
+/**
+ * @swagger
+ *
+ * /post/{postId}/recomment:
+ *  post:
+ *    summary: "대댓글달기"
+ *    description: "POST 방식으로 대댓글을 등록함"
+ *    tags: [Posts]
+ *    parameters:
+ *      - in: path
+ *        name: postId
+ *        required: true
+ *        description: postId
+ *        default: 1
+ *        schema:
+ *          type: number
+ *    requestBody:
+ *      description: 대댓글달기 API입니다.
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              commentId: 
+ *                type: integer
+ *                default: 5
+ *              content:
+ *                 type: string
+ *                 default: "5번 댓글에  달리는 대댓글이지롱~"
+ *        
+ *    responses:
+ *      "201":
+ *        description: "댓글 달기 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 201
+ *                fullComment:
+ *                  type: object
+ *                  properties:
+ *                    id:
+ *                      type: integer
+ *                      default: 9
+ *                    content:
+ *                      type: string
+ *                      default: "5번 댓글에  달리는 대댓글이지롱~"
+ *                    createdAt:
+ *                      type: string
+ *                      default: "2022-09-26T08:21:58.000Z"
+ *                    updatedAt:
+ *                      type: string
+ *                      default: "2022-09-27T10:33:28.000Z"
+ *                    UserId:
+ *                      type: integer
+ *                      default: 4
+ *                    PostId:
+ *                      type: integer
+ *                      default: 1
+ *                    RecommentId:
+ *                      type: integet
+ *                      default: 5
+ *                    User:
+ *                        type: object
+ *                        properties:
+ *                          id: 
+ *                            type: integer
+ *                            default: 4
+ *                          nickname: 
+ *                            type: string
+ *                            default: '대댓글작성자4의닉네임'
+ *                message:
+ *                  type: string
+ *                  default: "대댓글 달기 성공"
  */
 router.patch('/:postId/like', isLoggedIn, async (req, res, next) => { // PATCH /post/1/like
   try {
