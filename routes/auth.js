@@ -7,6 +7,7 @@ const { User, Image, Post } = require('../models');
 const { isLoggedIn, isNotLoggedIn } = require('./middlewares');
 const router = express.Router()
 router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
+
   try {
   
     const exUser = await User.findOne({ where: { email  :req.body.mail } });
@@ -37,8 +38,11 @@ router.post('/emailCheck', isNotLoggedIn, async(req, res, next) => {
   
     transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
-            console.error(error);
-            res.end('서버 에러')
+
+            return res.status(400).json({
+              code: 400,
+              message: '제대로된 이메일 형식을 입력하세요.'
+            })
         }
         req.session.authNum = authNum;
         req.session.mail = req.body.mail

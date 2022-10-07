@@ -222,9 +222,6 @@ router.get('/:postId', async (req, res, next) => {
       order: [
         [Comment, 'RecommentId', 'ASC'],
         [Comment, 'createdAt', 'ASC'],
-
-
-  
       ],
       include: [{
         model: User,
@@ -242,6 +239,7 @@ router.get('/:postId', async (req, res, next) => {
         model: User, // 좋아요 누른 사람
         as: 'Likers',
         attributes: ['id'],
+        through: {attributes: []}
       }],
     });
     res.status(200).json({
@@ -596,6 +594,44 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => { // PATCH /
   }
 });
 
+/**
+ * @swagger
+ *
+ * /post/{postId}/like:
+ *  patch:
+ *    summary: "게시글 좋아요 기능"
+ *    description: "PATCH 방식으로 게시글 좋아요를 등록함"
+ *    tags: [Posts]
+ *    parameters:
+ *      - in: path
+ *        name: postId
+ *        required: true
+ *        description: postId
+ *        default: 1
+ *        schema:
+ *          type: number
+ *        
+ *    responses:
+ *      "200":
+ *        description: "게시글 좋아요 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                PostId:
+ *                  type: integer
+ *                  default: 1
+ *                UserId:
+ *                  type: integer
+ *                  default: 3
+ *                message:
+ *                  type: string
+ *                  default: "게시글 좋아요 성공"
+ */
 router.delete('/:postId/like', isLoggedIn, async (req, res, next) => { // DELETE /post/1/like
   try {
     const post = await Post.findOne({ where: { id: req.params.postId }});
@@ -618,6 +654,44 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => { // DELETE
     next(error);
   }
 });
+/**
+ * @swagger
+ *
+ * /post/{postId}/like:
+ *  delete:
+ *    summary: "게시글 좋아요 취소 기능"
+ *    description: "DELETE 방식으로 게시글 좋아요를 취소함"
+ *    tags: [Posts]
+ *    parameters:
+ *      - in: path
+ *        name: postId
+ *        required: true
+ *        description: postId
+ *        default: 1
+ *        schema:
+ *          type: number
+ *        
+ *    responses:
+ *      "200":
+ *        description: "게시글 좋아요 취소 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                PostId:
+ *                  type: integer
+ *                  default: 1
+ *                UserId:
+ *                  type: integer
+ *                  default: 3
+ *                message:
+ *                  type: string
+ *                  default: "게시글 좋아요 취소 성공"
+ */
 
 router.patch('/:postId', isLoggedIn, async (req, res, next) => { // PATCH /post/10
   const hashtags = req.body.content.match(/#[^\s#]+/g);
