@@ -447,11 +447,21 @@ router.post('/:postId/comment', isLoggedIn, async (req, res, next) => { // POST 
   try {
     const post = await Post.findOne({
       where: { id: req.params.postId },
+      include: [{
+        model: Comment,
+        attributes: ['id']
+      }]
     });
     if (!post) {
       return res.status(403).json({
-        code: 402,
+        code: 403,
         message: '존재하지 않는 게시글 입니다.'
+      })
+    }
+    if(!post.Comments.map((v) => v.id).includes(req.body.commentId)){
+      return res.status(403).json({
+        code: 403,
+        message: `해당 게시글에는 id: ${req.body.commentId}인 댓글이 존재하지 않습니다.`
       })
     }
     const comment = await Comment.findOne({
@@ -572,6 +582,7 @@ router.post('/:postId/comment', isLoggedIn, async (req, res, next) => { // POST 
  *                  type: string
  *                  default: "대댓글 달기 성공"
  */
+
 router.patch('/:postId/like', isLoggedIn, async (req, res, next) => { // PATCH /post/1/like
   try {
     const post = await Post.findOne({ where: { id: req.params.postId }});
@@ -581,6 +592,7 @@ router.patch('/:postId/like', isLoggedIn, async (req, res, next) => { // PATCH /
         message: '존재하지 않는 게시글 입니다.'
       });
     }
+    
     await post.addLikers(req.user.id);
     res.json({
       code:200,
@@ -696,6 +708,20 @@ router.delete('/:postId/like', isLoggedIn, async (req, res, next) => { // DELETE
 router.patch('/:postId', isLoggedIn, async (req, res, next) => { // PATCH /post/10
   const hashtags = req.body.content.match(/#[^\s#]+/g);
   try {
+    let post = await Post.findOne({ where: { id: req.params.postId }});
+    if (!post) {
+      return res.status(403).json({
+        code: 403,
+        message: '존재하지 않는 게시글 입니다.'
+      });
+    }
+    if(post.UserId !== req.user.id){
+      return res.status(403).json({
+        code: 403,
+        message: '당신의 게시글이 아닙니다..'
+      });
+    }   
+    
     await Post.update({
       content: req.body.content
     }, {
@@ -704,7 +730,7 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => { // PATCH /post/
         UserId: req.user.id,
       },
     });
-    const post = await Post.findOne({ where: { id: req.params.postId }});
+    post = await Post.findOne({ where: { id: req.params.postId }});
     if (hashtags) {
       const result = await Promise.all(hashtags.map((tag) => Hashtag.findOrCreate({
         where: { name: tag.slice(1).toLowerCase() },
@@ -722,9 +748,71 @@ router.patch('/:postId', isLoggedIn, async (req, res, next) => { // PATCH /post/
     next(error);
   }
 });
+/**
+ * @swagger
+ *
+ * /post/{postId}:
+ *  patch:
+ *    summary: "게시글 수정 기능"
+ *    description: "PATCH 방식으로 게시글을 수정함"
+ *    tags: [Posts]
+ *    parameters:
+ *      - in: path
+ *        name: postId
+ *        required: true
+ *        description: postId
+ *        default: 1
+ *        schema:
+ *          type: number
+ *    requestBody:
+ *      description: 게시글 수정 API입니다.
+ *      required: true
+ *      content:
+ *        application/json:
+ *          schema:
+ *            type: object
+ *            properties:
+ *              content: 
+ *                type: string
+ *                default: "새로운 게시글 이지롱 #빠끄 #열코"
+ *        
+ *    responses:
+ *      "200":
+ *        description: "게시글 수정 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                PostId:
+ *                  type: integer
+ *                  default: 1
+ *                content:
+ *                  type: integer
+ *                  default:  "새로운 게시글 이지롱 #빠끄 #열코"
+ *                message:
+ *                  type: string
+ *                  default: "게시글 수정 성공"
+ */
 
 router.delete('/:postId', isLoggedIn, async (req, res, next) => { // DELETE /post/10
   try {
+    let post = await Post.findOne({ where: { id: req.params.postId }});
+    if (!post) {
+      return res.status(403).json({
+        code: 403,
+        message: '존재하지 않는 게시글 입니다.'
+      });
+    }
+    if(post.UserId !== req.user.id){
+      return res.status(403).json({
+        code: 403,
+        message: '당신의 게시글이 아닙니다..'
+      });
+    }  
     await Post.destroy({
       where: {
         id: req.params.postId,
@@ -742,5 +830,39 @@ router.delete('/:postId', isLoggedIn, async (req, res, next) => { // DELETE /pos
     next(error);
   }
 });
-
+/**
+ * @swagger
+ *
+ * /post/{postId}:
+ *  delete:
+ *    summary: "게시글 삭제 기능"
+ *    description: "DELETE 방식으로 게시글을 삭제함"
+ *    tags: [Posts]
+ *    parameters:
+ *      - in: path
+ *        name: postId
+ *        required: true
+ *        description: postId
+ *        default: 1
+ *        schema:
+ *          type: number
+ *        
+ *    responses:
+ *      "200":
+ *        description: "게시글 삭제 성공시 응답"
+ *        content:
+ *          application/json:
+ *            schema:
+ *              type: object
+ *              properties:
+ *                code:
+ *                  type: integer
+ *                  default: 200
+ *                PostId:
+ *                  type: integer
+ *                  default: 1
+ *                message:
+ *                  type: string
+ *                  default: "게시글 삭제 성공"
+ */
 module.exports = router;

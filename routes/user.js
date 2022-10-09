@@ -200,6 +200,12 @@ router.patch('/nickname', isLoggedIn, async (req, res, next) => {
           message: '존재하지 않는 사용자 입니다.'
         });
       }
+      if (!req.body.newPassword){
+        return res.status(403).json({
+          code: 403,
+          message: '새로운 비밀번호를 전송하셔야 합니다.'
+        });     
+      }
       const result = await bcrypt.compare(req.body.newPassword, user1.password);
       if (result) {
         return res.status(403).json({
@@ -334,16 +340,8 @@ router.patch('/profile', isLoggedIn, async (req, res, next) => {
       if (req.body.image === 'empty'){
         if (user.Image) {
           await user.setImage(null)
-          await Image.destroy({
-            where: { id: user.Image.id }
-          })
         }
       } else{
-        if(user.Image){
-          await Image.destroy({
-            where: { id: user.Image.id }
-          })
-        } 
           const image = await Image.create({ src: req.body.image });  
           await user.setImage(image);
       }
