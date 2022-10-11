@@ -95,6 +95,7 @@
  *                  default: '닉네임 수정 성공'
  */
 
+
 /**
  * @swagger
  *
@@ -129,6 +130,7 @@
  *                  type: string
  *                  default: '비밀번호 변경 성공'
  */
+
 
 /**
  * @swagger
@@ -214,4 +216,3 @@
  *                  type: string
  *                  default: '프로필 적용 성공'
  */
-

@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser');
 const AuthRouter = require('./routes/auth')
 const userRouter = require('./routes/user')
 const postRouter = require('./routes/post')
+const postsRouter = require('./routes/posts')
 const db = require('./models');
 const passport = require('passport')
 const passportConfig = require('./passport');
@@ -45,6 +46,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(specs))
 app.use('/auth', AuthRouter)
 app.use('/user', userRouter)
 app.use('/post', postRouter);
+app.use('/posts', postsRouter);
 
 app.listen(8080, () => {
   console.log('서버 실행중')
